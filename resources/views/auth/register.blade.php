@@ -8,6 +8,22 @@
                 <p class="text-gray-600 mt-2">Join the ENSAT community today</p>
             </div>
 
+            <div class="mb-8">
+                <button id="google-signin-register-btn" type="button"
+                    class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-6 h-6"
+                        alt="Google Logo">
+                    <span>Sign up with Google</span>
+                </button>
+                <p id="register-error-message" class="text-red-500 text-sm mt-4 hidden"></p>
+
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">Or register with email</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+            </div>
+
             <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
@@ -82,4 +98,63 @@
             </form>
         </div>
     </div>
+    <!-- Firebase Script for Registration Page -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeBns6M98nPAUy2Hp_hPdRtlxhDjnrTE0",
+            authDomain: "ensatapp.firebaseapp.com",
+            projectId: "ensatapp",
+            storageBucket: "ensatapp.firebasestorage.app",
+            messagingSenderId: "673970635896",
+            appId: "1:673970635896:web:8b42ec63edd681fb7f598d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const btn = document.getElementById('google-signin-register-btn');
+        const errorMsg = document.getElementById('register-error-message');
+
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                errorMsg.classList.add('hidden');
+
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    const user = result.user;
+                    const idToken = await user.getIdToken();
+
+                    const response = await fetch("{{ route('login.google') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({ id_token: idToken })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        throw new Error(data.message || 'Registration failed on server');
+                    }
+
+                } catch (error) {
+                    console.error('Registration Error:', error);
+                    errorMsg.textContent = "Registration failed: " + error.message;
+                    errorMsg.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+        }
+    </script>
 @endsection
