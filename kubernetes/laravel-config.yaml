@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laravel-config
+data:
+  APP_NAME: "EnsatApp"
+  APP_ENV: "production"
+  APP_DEBUG: "true"
+  APP_URL: "http://localhost"
+  LOG_CHANNEL: "stderr"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "mysql-service"
+  DB_PORT: "3306"
+  DB_DATABASE: "ensat_app"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: laravel-secret
+type: Opaque
+stringData:
+  APP_KEY: "base64:UOXUTcKfoL1Xj5ZCykCY6qILJUS12JWA6jXjIZS2GJM="
+  DB_USERNAME: "root"
+  DB_PASSWORD: "root_password"
+  GOOGLE_CREDENTIALS: |
+    {
+      "type": "service_account",
+      "project_id": "ensatapp",
+      "private_key_id": "c0793c3a6f13a72b373a53...", 
+      "universe_domain": "googleapis.com"
+    }
